@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <title>Rotation</title>
+</head>
+<body style="height: 100%; margin: 0">
+<svg id="frame" height="100%" width="100%"></svg>
+<script>
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    var frame = document.getElementById("frame");
+
+    var starting_objects = [
+        // {name: "obj1", cx: 500, cy: 300, r: 120, fill: "yellow", "fill-opacity": "0.8", vx: 0, vy: 0},
+        // {name: "obj1", cx: 500, cy: 100, r: 22, fill: "#f7084c", "fill-opacity": "0.8", vx: 200, vy: 0},
+        // {name: "obj2", cx: 500, cy: 500, r: 22, fill: "#0582ca", "fill-opacity": "0.8", vx: -200, vy: 0},
+        //    {name: "obj3", cx: 150, cy: 250, r: 20, fill: "#0582ca", "fill-opacity": "0.8", vx: -5, vy: 5},
+    ];
+    const n_objs = 2;
+    for (let i = 0; i < n_objs; ++i) {
+        starting_objects.push({
+                name: i,
+                cx: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().width / 2 + frame.getBoundingClientRect().width / 4),
+                cy: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().height / 2 + frame.getBoundingClientRect().height / 4),
+                r: randInt(1, 50),
+                fill: `rgb(${randInt(0, 255)}, ${randInt(0, 255)}, ${randInt(0, 255)})`,
+                // "fill-opacity": Math.random(),
+                "fill-opacity": 1,
+                // vx: randInt(-300, 300),
+                // vy: randInt(-300, 300),
+                vx: 0,
+                vy: 0
+            }
+        );
+    }
+
+    // Init
+    for (var obj of starting_objects) {
+        var element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        for (var prop in obj) {
+            element.setAttribute(prop, obj[prop]);
+        }
+        frame.appendChild(element);
+    }
+
+    function update_objects(node) {
+        var dt = 0.05;
+        var base_density = 20;
+        // updating velocity
+        for (var obj1 of node.childNodes) {
+            for (var obj2 of node.childNodes) {
+                if (obj1 !== obj2) {
+                    var x1 = parseFloat(obj1.getAttribute("cx"));
+                    var y1 = parseFloat(obj1.getAttribute("cy"));
+
+                    var x2 = parseFloat(obj2.getAttribute("cx"));
+                    var y2 = parseFloat(obj2.getAttribute("cy"));
+
+                    var r1 = parseFloat(obj1.getAttribute("r"));
+                    var r2 = parseFloat(obj2.getAttribute("r"));
+
+                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    if (d < r1 + r2) {
+                        r2 *= d / (r2 + r1);
+                    }
+
+                    var density = parseFloat(obj2.getAttribute("fill-opacity"));
+                    var m2 = r2 * r2 * r2 * base_density * density;
+
+                    var G = m2 / (d * d * d);
+
+                    var v1_x = parseFloat(obj1.getAttribute("vx"));
+                    var v1_y = parseFloat(obj1.getAttribute("vy"));
+
+                    obj1.setAttribute("vx", v1_x + (x2 - x1) * G * dt);
+                    obj1.setAttribute("vy", v1_y + (y2 - y1) * G * dt);
+                }
+            }
+        }
+
+        // updating positions
+        for (var obj of node.childNodes) {
+            var x = parseFloat(obj.getAttribute("cx"));
+            var y = parseFloat(obj.getAttribute("cy"));
+            var vx = parseFloat(obj.getAttribute("vx"));
+            var vy = parseFloat(obj.getAttribute("vy"));
+            //console.log({x:x,y:y,vx:vx,vy:vy});
+            obj.setAttribute("cx", x + vx * dt);
+            obj.setAttribute("cy", y + vy * dt);
+        }
+    };
+
+    var update = setInterval(function () {
+        update_objects(frame);
+    }, 10)
+</script>
+
+</body>
+</html>
