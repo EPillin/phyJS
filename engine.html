@@ -14,17 +14,33 @@
 <script>
 
     var dt = 0.05;
-    var base_density = 50;
-    var n_objs = 200;
+    var base_density = 5;
+    var n_objs = 2;
 
     var update_period = 10;
-    var probe_period = 1000;
+    var probe_period = 10000;
 
     var max_velocity = 10;
-    var max_r = 3;
+    var max_r = 30;
 
     function randInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    function kinetic_E(m, v) {
+        return m * v * v;
+    }
+
+    function Vxy(v1x, v1y, v2x = 0, v2y = 0) {
+        return Math.sqrt((v1x - v2x) * (v1x - v2x) + (v1y - v2y) * (v1y - v2y));
+    }
+
+    function binding_E(m, r) {
+        return m * m / r;
+    }
+
+    function potential_E(m1, m2, d) {
+        return -m1 * m2 / d;
     }
 
     var frame = document.getElementById("frame");
@@ -110,6 +126,16 @@
 
                         var rgb = rgb1.map((e, i) => Math.round((m1 * e + m2 * rgb2[i]) / m));
 
+                        var v1 = Math.sqrt(v1_x * v1_x + v1_y * v1_y);
+                        var v2 = Math.sqrt(v2_x * v2_x + v2_y * v2_y);
+                        var v = Math.sqrt(v_x * v_x + v_y * v_y);
+                        console.log({
+                            E1: m1 * v1 * v1,
+                            E2: m2 * v2 * v2,
+                            E: m * v * v,
+                            diff: m * v * v - m1 * v1 * v1 - m2 * v2 * v2
+                        });
+
                         obj1.setAttribute("density", density);
                         obj1.setAttribute("cx", x);
                         obj1.setAttribute("cy", y);
@@ -129,7 +155,6 @@
 
 
     function update_velocity(node) {
-
         for (var obj1 of node.childNodes) {
             for (var obj2 of node.childNodes) {
                 if (obj1 !== obj2) {
@@ -250,7 +275,7 @@
     var probe = setInterval(function () {
         console.log(analyse_system(frame));
     }, probe_period);
-
+    // clearInterval(probe);
 </script>
 
 </body>
