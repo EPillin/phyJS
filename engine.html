@@ -3,10 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Rotation</title>
+    <style>
+        circle {
+            transition: r 0.5s; /* chrome only for now :( */
+        }
+    </style>
 </head>
 <body style="height: 100%; margin: 0">
 <svg id="frame" height="100%" width="100%"></svg>
 <script>
+
+    var dt = 0.05;
+    var base_density = 50;
+    var n_objs = 200;
+
+    var update_period = 10;
+    var probe_period = 1000;
+
+    var max_velocity = 10;
+    var max_r = 3;
+
     function randInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
@@ -14,31 +30,30 @@
     var frame = document.getElementById("frame");
 
     var starting_objects = [
-        // {name: "obj1", cx: 500, cy: 300, r: 120, fill: "yellow", "fill-opacity": "0.8", vx: 0, vy: 0},
-        // {name: "obj1", cx: 500, cy: 100, r: 22, fill: "#f7084c", "fill-opacity": "0.8", vx: 200, vy: 0},
-        // {name: "obj2", cx: 500, cy: 500, r: 22, fill: "#0582ca", "fill-opacity": "0.8", vx: -200, vy: 0},
-        //    {name: "obj3", cx: 150, cy: 250, r: 20, fill: "#0582ca", "fill-opacity": "0.8", vx: -5, vy: 5},
+        // {name: "obj1", cx: 500, cy: 300, r: 80, fill: "rgb(255,255,0)", "fill-opacity": "0.8", vx: 0, vy: 0},
+        // {name: "obj1", cx: 500, cy: 100, r: 22, fill: "rgb(247,8,76)", "fill-opacity": "0.8", vx: 200, vy: 0},
+        // {name: "obj2", cx: 500, cy: 500, r: 22, fill: "rgb(5,130,202)", "fill-opacity": "0.8", vx: -200, vy: 0},
+        // {name: "obj3", cx: 150, cy: 250, r: 20, fill: "#0582ca", "fill-opacity": "0.8", vx: -5, vy: 5},
     ];
-    const n_objs = 2;
     for (let i = 0; i < n_objs; ++i) {
         starting_objects.push({
                 name: i,
                 cx: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().width / 2 + frame.getBoundingClientRect().width / 4),
                 cy: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().height / 2 + frame.getBoundingClientRect().height / 4),
-                r: randInt(1, 50),
+                r: randInt(1, max_r),
                 fill: `rgb(${randInt(0, 255)}, ${randInt(0, 255)}, ${randInt(0, 255)})`,
                 // "fill-opacity": Math.random(),
                 "fill-opacity": 1,
-                // vx: randInt(-300, 300),
-                // vy: randInt(-300, 300),
-                vx: 0,
-                vy: 0
+                vx: randInt(-max_velocity, max_velocity),
+                vy: randInt(-max_velocity, max_velocity),
+                // vx: 0,
+                // vy: 0
             }
         );
     }
-
     // Init
     for (var obj of starting_objects) {
+
         var element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         for (var prop in obj) {
             element.setAttribute(prop, obj[prop]);
@@ -46,10 +61,75 @@
         frame.appendChild(element);
     }
 
-    function update_objects(node) {
-        var dt = 0.05;
-        var base_density = 20;
-        // updating velocity
+    function resolve_collisions(node) {
+        for (var obj1 of node.childNodes) {
+            for (var obj2 of node.childNodes) {
+                if (obj1 !== obj2) {
+                    var x1 = parseFloat(obj1.getAttribute("cx"));
+                    var y1 = parseFloat(obj1.getAttribute("cy"));
+
+                    var x2 = parseFloat(obj2.getAttribute("cx"));
+                    var y2 = parseFloat(obj2.getAttribute("cy"));
+
+                    var r1 = parseFloat(obj1.getAttribute("r"));
+                    var r2 = parseFloat(obj2.getAttribute("r"));
+
+                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    if (d < r1 + r2) {
+                        r2 *= d / (r2 + r1);
+
+                        var v1_x = parseFloat(obj1.getAttribute("vx"));
+                        var v1_y = parseFloat(obj1.getAttribute("vy"));
+                        var density1 = parseFloat(obj1.getAttribute("fill-opacity"));
+                        var m1 = r1 * r1 * r1 * base_density * density1;
+
+                        var v2_x = parseFloat(obj2.getAttribute("vx"));
+                        var v2_y = parseFloat(obj2.getAttribute("vy"));
+                        var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                        var m2 = r2 * r2 * r2 * base_density * density2;
+
+                        var m = m1 + m2;
+
+                        if (m1 > m2) {
+                            var x = x1, y = y1;
+                        } else {
+                            var x = x2, y = y2;
+                        }
+                        // var x = (m1 * x1 + m2 * x2) / m;
+                        // var y = (m1 * y1 + m2 * y2) / m;
+
+                        var v_x = (m1 * v1_x + m2 * v2_x) / m;
+                        var v_y = (m1 * v1_y + m2 * v2_y) / m;
+
+                        var density = (m1 * density1 + m2 * density2) / m;
+
+                        var r = Math.cbrt(m / (base_density * density));
+
+                        var rgb1 = obj1.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
+                        var rgb2 = obj2.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
+
+                        var rgb = rgb1.map((e, i) => Math.round((m1 * e + m2 * rgb2[i]) / m));
+
+                        obj1.setAttribute("density", density);
+                        obj1.setAttribute("cx", x);
+                        obj1.setAttribute("cy", y);
+                        obj1.setAttribute("vx", v_x);
+                        obj1.setAttribute("vy", v_y);
+
+                        obj1.setAttribute("r", r);
+                        obj1.setAttribute("fill", `rgb(${rgb.join(',')})`);
+                        frame.removeChild(obj2);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+    function update_velocity(node) {
+
         for (var obj1 of node.childNodes) {
             for (var obj2 of node.childNodes) {
                 if (obj1 !== obj2) {
@@ -67,8 +147,8 @@
                         r2 *= d / (r2 + r1);
                     }
 
-                    var density = parseFloat(obj2.getAttribute("fill-opacity"));
-                    var m2 = r2 * r2 * r2 * base_density * density;
+                    var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                    var m2 = r2 * r2 * r2 * base_density * density2;
 
                     var G = m2 / (d * d * d);
 
@@ -80,8 +160,9 @@
                 }
             }
         }
+    }
 
-        // updating positions
+    function update_position(node) {
         for (var obj of node.childNodes) {
             var x = parseFloat(obj.getAttribute("cx"));
             var y = parseFloat(obj.getAttribute("cy"));
@@ -93,9 +174,83 @@
         }
     };
 
+    function analyse_system(node) {
+        var kinetic = 0;
+        var potential = 0;
+        var binding = 0;
+        var lightest = Infinity;
+        var heaviest = 0;
+        var slowest = Infinity;
+        var fastest = 0;
+        var mass = 0;
+
+        for (var obj1 of node.childNodes) {
+
+            var v1_x = parseFloat(obj1.getAttribute("vx"));
+            var v1_y = parseFloat(obj1.getAttribute("vy"));
+
+            var r1 = parseFloat(obj1.getAttribute("r"));
+
+            var density1 = parseFloat(obj1.getAttribute("fill-opacity"));
+            var m1 = r1 * r1 * r1 * base_density * density1;
+
+            var v = Math.sqrt(v1_x * v1_x + v1_y * v1_y);
+
+            kinetic += m1 * v * v;
+            binding += m1 * m1 / r1;
+
+            lightest = m1 < lightest ? m1 : lightest;
+            heaviest = m1 > heaviest ? m1 : heaviest;
+
+            slowest = v < slowest ? v : slowest;
+            fastest = v > fastest ? v : fastest;
+
+            mass += m1;
+
+            for (var obj2 of node.childNodes) {
+                if (obj1 != obj2) {
+                    var x1 = parseFloat(obj1.getAttribute("cx"));
+                    var y1 = parseFloat(obj1.getAttribute("cy"));
+
+                    var x2 = parseFloat(obj2.getAttribute("cx"));
+                    var y2 = parseFloat(obj2.getAttribute("cy"));
+
+                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+                    var r2 = parseFloat(obj2.getAttribute("r"));
+
+                    var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                    var m2 = r2 * r2 * r2 * base_density * density2;
+
+                    potential -= m1 * m2 / d;
+                }
+            }
+        }
+
+        return {
+            kinetic: kinetic,
+            potential: potential,
+            binding: binding,
+            total: kinetic + potential + binding,
+            lightest: lightest,
+            heaviest: heaviest,
+            slowest: slowest,
+            fastest: fastest,
+            mass: mass,
+            pop: node.childNodes.length
+        };
+    }
+
     var update = setInterval(function () {
-        update_objects(frame);
-    }, 10)
+        while (resolve_collisions(frame)) ;
+        update_velocity(frame);
+        update_position(frame);
+    }, update_period)
+
+    var probe = setInterval(function () {
+        console.log(analyse_system(frame));
+    }, probe_period);
+
 </script>
 
 </body>
