@@ -12,16 +12,16 @@
 <body style="height: 100%; margin: 0">
 <svg id="frame" height="100%" width="100%"></svg>
 <script>
-    var n_objs = 50;
+    var n_objs = 40;
 
     var dt = .03;
     var base_density = 10;
 
     var update_period = 50;
-    var probe_period = 1000;
+    var probe_period = 5000;
 
-    var max_velocity = 100;
-    var max_r = 20;
+    var max_velocity = 80;
+    var max_r = 25;
 
     var G = .5;
     var E_scale = .000001;
@@ -48,6 +48,52 @@
 
     function potential_E(m1, m2, d) {
         return E_scale * -G * m1 * m2 / d;
+    }
+
+    function add_objects(node, objects) {
+        for (var obj of objects) {
+            var element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            for (var prop in obj) {
+                element.setAttribute(prop, obj[prop]);
+            }
+            node.appendChild(element);
+        }
+    }
+
+    function cleaning(node, min_size) {
+        Array.from(node.childNodes).filter(obj => obj.getAttribute("r") < min_size).map(obj => node.removeChild(obj));
+    }
+
+    function center_on(node, obj) {
+        var x0 = node.getBoundingClientRect().width / 2;
+        var y0 = node.getBoundingClientRect().height / 2;
+        var x = parseFloat(obj.getAttribute("cx"));
+        var y = parseFloat(obj.getAttribute("cy"));
+
+        var dx = x0 - x;
+        var dy = y0 - y;
+
+        for (let obj of node.childNodes) {
+            var x = parseFloat(obj.getAttribute("cx"));
+            var y = parseFloat(obj.getAttribute("cy"));
+            obj.setAttribute("cx", x + dx);
+            obj.setAttribute("cy", y + dy);
+        }
+    }
+
+
+    function center_on_max_r(node) {
+        let max_r = 0;
+        let max_obj;
+
+        for (let obj of node.childNodes){
+            let r = parseFloat(obj.getAttribute('r'));
+            if (r > max_r){
+                max_r = r;
+                max_obj = obj;
+            }
+        }
+        center_on(node, max_obj);
     }
 
     var frame = document.getElementById("frame");
@@ -78,15 +124,6 @@
     // Init
     add_objects(frame, starting_objects);
 
-    function add_objects(node, objects) {
-        for (var obj of objects) {
-            var element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            for (var prop in obj) {
-                element.setAttribute(prop, obj[prop]);
-            }
-            node.appendChild(element);
-        }
-    }
 
     function resolve_collisions(node) {
         for (var obj1 of node.childNodes) {
@@ -144,20 +181,16 @@
                         var v2 = Vxy(v2_x, v2_y);
                         var v = Vxy(v_x, v_y);
 
-                        console.log({
-                            diffEc: kinetic_E(m, v) - kinetic_E(m1, v1) - kinetic_E(m2, v2),
-                            Eb: binding_E(m, r),
-                        });
-
                         var deltaKinetic = kinetic_E(m1, v1) + kinetic_E(m2, v2) - kinetic_E(m, v);
                         if (5 * deltaKinetic > binding_E(m, r)) {
                             var Eu = deltaKinetic * collision_unbind_E_ratio;
                             var Ek = deltaKinetic * collision_kinetic_E_ratio;
 
                             var unbinded_mass = Math.min(Eu / binding_E(m, r), 1) * m;
-                            m -= unbinded_mass;
-                            r = Math.cbrt(m / (base_density * density));
+                            new_m = m - unbinded_mass;
+                            r = Math.cbrt(new_m / (base_density * density));
 
+                            var new_objs = [];
                             if (unbinded_mass * 2 < m) {
                                 // var nb_new_objs = Math.round(1 / (.1 + Math.random() * .9));
                                 var nb_new_objs = randInt(1, 10);
@@ -167,7 +200,6 @@
                                 var x0 = x - (r + new_r + 1) * (x - other_x) / d;
                                 var y0 = y - (r + new_r + 1) * (y - other_y) / d;
 
-                                var new_objs = [];
                                 if (nb_new_objs % 2) {
                                     for (var i = Math.ceil(-nb_new_objs / 2); i < nb_new_objs / 2; ++i) {
                                         new_objs.push({
@@ -197,10 +229,29 @@
                                         }
                                     }
                                 }
-                                add_objects(node, new_objs);
-                            } else {
+                            } else if (Math.cbrt(m / (base_density * density)) > 2) {
+                                var nb_new_objs = randInt(4, 10);
+                                var new_r = Math.cbrt(m / (nb_new_objs * base_density * density));
+                                var R = 1.5 * nb_new_objs * new_r / Math.PI;
 
+                                var E = deltaKinetic + binding_E(m, r) - nb_new_objs * binding_E(m / nb_new_objs, new_r);
+                                var v = 500 * Math.sqrt(2 * E / m);
+                                for (let i = 0; i < nb_new_objs; ++i) {
+                                    let theta = i * 2 * Math.PI / nb_new_objs;
+                                    new_objs.push({
+                                        name: `${obj1.getAttribute("name")}_${i}`,
+                                        cx: x + R * Math.cos(theta) * (x - other_x) / d + R * Math.sin(theta) * (y - other_y) / d,
+                                        cy: y + R * Math.cos(theta) * (y - other_y) / d + R * Math.sin(theta) * (other_x - x) / d,
+                                        r: new_r,
+                                        fill: fill,
+                                        "fill-opacity": 1,
+                                        vx: v_x + v * Math.cos(theta) * (x - other_x) / d + v * Math.sin(theta) * (y - other_y) / d,
+                                        vy: v_y + v * Math.cos(theta) * (y - other_y) / d + v * Math.sin(theta) * (other_x - x) / d
+                                    });
+                                }
+                                frame.removeChild(obj1);
                             }
+                            add_objects(node, new_objs);
                         }
                         obj1.setAttribute("vx", v_x);
                         obj1.setAttribute("vy", v_y);
@@ -332,8 +383,10 @@
 
     var update = setInterval(function () {
         while (resolve_collisions(frame)) ;
+        cleaning(frame, 0.5);
         update_velocity(frame);
         update_position(frame);
+        center_on_max_r(frame);
     }, update_period)
 
     var probe = setInterval(function () {
