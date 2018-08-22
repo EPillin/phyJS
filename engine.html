@@ -12,22 +12,22 @@
 <body style="height: 100%; margin: 0">
 <svg id="frame" height="100%" width="100%"></svg>
 <script>
-    var n_objs = 40;
+    const n_objs = 40;
 
-    var dt = .03;
-    var base_density = 10;
+    const dt = .03;
+    const base_density = 10;
 
-    var update_period = 50;
-    var probe_period = 5000;
+    const update_period = 50;
+    const probe_period = 5000;
 
-    var max_velocity = 80;
-    var max_r = 25;
+    const max_velocity = 80;
+    const max_r = 25;
 
-    var G = .5;
-    var E_scale = .000001;
+    const G = .5;
+    const E_scale = .000001;
 
-    var collision_unbind_E_ratio = .01;
-    var collision_kinetic_E_ratio = .99;
+    const collision_unbind_E_ratio = .01;
+    const collision_kinetic_E_ratio = .99;
 
     function randInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
@@ -51,9 +51,9 @@
     }
 
     function add_objects(node, objects) {
-        for (var obj of objects) {
-            var element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            for (var prop in obj) {
+        for (const obj of objects) {
+            const element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            for (let prop in obj) {
                 element.setAttribute(prop, obj[prop]);
             }
             node.appendChild(element);
@@ -65,17 +65,17 @@
     }
 
     function center_on(node, obj) {
-        var x0 = node.getBoundingClientRect().width / 2;
-        var y0 = node.getBoundingClientRect().height / 2;
-        var x = parseFloat(obj.getAttribute("cx"));
-        var y = parseFloat(obj.getAttribute("cy"));
+        const x0 = node.getBoundingClientRect().width / 2;
+        const y0 = node.getBoundingClientRect().height / 2;
+        const x = parseFloat(obj.getAttribute("cx"));
+        const y = parseFloat(obj.getAttribute("cy"));
 
-        var dx = x0 - x;
-        var dy = y0 - y;
+        const dx = x0 - x;
+        const dy = y0 - y;
 
-        for (let obj of node.childNodes) {
-            var x = parseFloat(obj.getAttribute("cx"));
-            var y = parseFloat(obj.getAttribute("cy"));
+        for (const obj of node.childNodes) {
+            const x = parseFloat(obj.getAttribute("cx"));
+            const y = parseFloat(obj.getAttribute("cy"));
             obj.setAttribute("cx", x + dx);
             obj.setAttribute("cy", y + dy);
         }
@@ -86,8 +86,8 @@
         let max_r = 0;
         let max_obj;
 
-        for (let obj of node.childNodes) {
-            let r = parseFloat(obj.getAttribute('r'));
+        for (const obj of node.childNodes) {
+            const r = parseFloat(obj.getAttribute('r'));
             if (r > max_r) {
                 max_r = r;
                 max_obj = obj;
@@ -96,9 +96,9 @@
         center_on(node, max_obj);
     }
 
-    var frame = document.getElementById("frame");
+    const frame = document.getElementById("frame");
 
-    var starting_objects = [
+    const starting_objects = [
         // {name: "obj0", cx: 500, cy: 300, r: 80, fill: "rgb(255,255,0)", "fill-opacity": "0.8", vx: 0, vy: 0},
         // {name: "obj1", cx: 200, cy: 100, r: 22, fill: "rgb(247,8,76)", "fill-opacity": "0.8", vx: 0, vy: 50},
         // {name: "obj2", cx: 200, cy: 500, r: 22, fill: "rgb(5,130,202)", "fill-opacity": "0.8", vx: 0, vy: -70},
@@ -115,8 +115,6 @@
                 "fill-opacity": 1,
                 vx: randInt(-max_velocity, max_velocity),
                 vy: randInt(-max_velocity, max_velocity),
-                // vx: 0,
-                // vy: 0
             }
         );
     }
@@ -126,33 +124,33 @@
 
 
     function resolve_collisions(node) {
-        for (var obj1 of node.childNodes) {
-            for (var obj2 of node.childNodes) {
+        for (let obj1 of node.childNodes) {
+            for (let obj2 of node.childNodes) {
                 if (obj1 !== obj2) {
-                    var x1 = parseFloat(obj1.getAttribute("cx"));
-                    var y1 = parseFloat(obj1.getAttribute("cy"));
+                    const x1 = parseFloat(obj1.getAttribute("cx"));
+                    const y1 = parseFloat(obj1.getAttribute("cy"));
 
-                    var x2 = parseFloat(obj2.getAttribute("cx"));
-                    var y2 = parseFloat(obj2.getAttribute("cy"));
+                    const x2 = parseFloat(obj2.getAttribute("cx"));
+                    const y2 = parseFloat(obj2.getAttribute("cy"));
 
-                    var r1 = parseFloat(obj1.getAttribute("r"));
-                    var r2 = parseFloat(obj2.getAttribute("r"));
+                    const r1 = parseFloat(obj1.getAttribute("r"));
+                    let r2 = parseFloat(obj2.getAttribute("r"));
 
-                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    const d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
                     if (d < r1 + r2) {
                         r2 *= d / (r2 + r1);
 
-                        var v1_x = parseFloat(obj1.getAttribute("vx"));
-                        var v1_y = parseFloat(obj1.getAttribute("vy"));
-                        var density1 = parseFloat(obj1.getAttribute("fill-opacity"));
-                        var m1 = r1 * r1 * r1 * base_density * density1;
+                        const v1_x = parseFloat(obj1.getAttribute("vx"));
+                        const v1_y = parseFloat(obj1.getAttribute("vy"));
+                        const density1 = parseFloat(obj1.getAttribute("fill-opacity"));
+                        const m1 = r1 * r1 * r1 * base_density * density1;
 
-                        var v2_x = parseFloat(obj2.getAttribute("vx"));
-                        var v2_y = parseFloat(obj2.getAttribute("vy"));
-                        var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
-                        var m2 = r2 * r2 * r2 * base_density * density2;
+                        const v2_x = parseFloat(obj2.getAttribute("vx"));
+                        const v2_y = parseFloat(obj2.getAttribute("vy"));
+                        const density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                        const m2 = r2 * r2 * r2 * base_density * density2;
 
-                        var m = m1 + m2;
+                        const m = m1 + m2;
 
                         if (m1 > m2) {
                             var x = x1, y = y1;
@@ -161,47 +159,47 @@
                             var x = x2, y = y2;
                             var other_x = x1, other_y = y1;
                         }
-                        // var x = (m1 * x1 + m2 * x2) / m;
-                        // var y = (m1 * y1 + m2 * y2) / m;
+                        // const x = (m1 * x1 + m2 * x2) / m;
+                        // const y = (m1 * y1 + m2 * y2) / m;
 
-                        var v_x = (m1 * v1_x + m2 * v2_x) / m;
-                        var v_y = (m1 * v1_y + m2 * v2_y) / m;
+                        const v_x = (m1 * v1_x + m2 * v2_x) / m;
+                        const v_y = (m1 * v1_y + m2 * v2_y) / m;
 
-                        var density = (m1 * density1 + m2 * density2) / m;
+                        const density = (m1 * density1 + m2 * density2) / m;
 
-                        var r = Math.cbrt(m / (base_density * density));
+                        let r = Math.cbrt(m / (base_density * density));
 
-                        var rgb1 = obj1.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
-                        var rgb2 = obj2.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
-                        var rgb = rgb1.map((e, i) => Math.round((m1 * e + m2 * rgb2[i]) / m));
+                        const rgb1 = obj1.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
+                        const rgb2 = obj2.getAttribute('fill').match(/\d+/g).map((e) => parseFloat(e));
+                        const rgb = rgb1.map((e, i) => Math.round((m1 * e + m2 * rgb2[i]) / m));
 
-                        var fill = `rgb(${rgb.join(',')})`;
+                        const fill = `rgb(${rgb.join(',')})`;
 
-                        var v1 = Vxy(v1_x, v1_y);
-                        var v2 = Vxy(v2_x, v2_y);
-                        var v = Vxy(v_x, v_y);
+                        const v1 = Vxy(v1_x, v1_y);
+                        const v2 = Vxy(v2_x, v2_y);
+                        const v = Vxy(v_x, v_y);
 
-                        var deltaKinetic = kinetic_E(m1, v1) + kinetic_E(m2, v2) - kinetic_E(m, v);
+                        const deltaKinetic = kinetic_E(m1, v1) + kinetic_E(m2, v2) - kinetic_E(m, v);
                         if (5 * deltaKinetic > binding_E(m, r)) {
-                            var Eu = deltaKinetic * collision_unbind_E_ratio;
-                            var Ek = deltaKinetic * collision_kinetic_E_ratio;
+                            const Eu = deltaKinetic * collision_unbind_E_ratio;
+                            const Ek = deltaKinetic * collision_kinetic_E_ratio;
 
-                            var unbinded_mass = Math.min(Eu / binding_E(m, r), 1) * m;
+                            const unbinded_mass = Math.min(Eu / binding_E(m, r), 1) * m;
                             new_m = m - unbinded_mass;
                             r = Math.cbrt(new_m / (base_density * density));
 
-                            var new_objs = [];
+                            const new_objs = [];
                             if (unbinded_mass * 2 < m) {
-                                // var nb_new_objs = Math.round(1 / (.1 + Math.random() * .9));
-                                var nb_new_objs = randInt(1, 10);
-                                var new_r = Math.cbrt(unbinded_mass / (nb_new_objs * base_density * density));
-                                var new_v = 100 * Math.sqrt(2 * Ek / unbinded_mass);
+                                // const nb_new_objs = Math.round(1 / (.1 + Math.random() * .9));
+                                const nb_new_objs = randInt(1, 10);
+                                const new_r = Math.cbrt(unbinded_mass / (nb_new_objs * base_density * density));
+                                const new_v = 100 * Math.sqrt(2 * Ek / unbinded_mass);
 
-                                var x0 = x - (r + new_r + 1) * (x - other_x) / d;
-                                var y0 = y - (r + new_r + 1) * (y - other_y) / d;
+                                const x0 = x - (r + new_r + 1) * (x - other_x) / d;
+                                const y0 = y - (r + new_r + 1) * (y - other_y) / d;
 
                                 if (nb_new_objs % 2) {
-                                    for (var i = Math.ceil(-nb_new_objs / 2); i < nb_new_objs / 2; ++i) {
+                                    for (let i = Math.ceil(-nb_new_objs / 2); i < nb_new_objs / 2; ++i) {
                                         let theta = Math.PI / (nb_new_objs + 1) * i + Math.random() * 2 - 1;
                                         new_objs.push({
                                             name: `${obj1.getAttribute("name")}_${i}`,
@@ -215,7 +213,7 @@
                                         });
                                     }
                                 } else {
-                                    for (var i = -nb_new_objs / 2; i < 1 + nb_new_objs / 2; ++i) {
+                                    for (let i = -nb_new_objs / 2; i < 1 + nb_new_objs / 2; ++i) {
                                         if (i) {
                                             let theta = Math.PI / (nb_new_objs + 1) * (i - .5) + Math.random() * 2 - 1;
                                             new_objs.push({
@@ -232,12 +230,12 @@
                                     }
                                 }
                             } else if (Math.cbrt(m / (base_density * density)) > 2) {
-                                var nb_new_objs = randInt(4, 10);
-                                var new_r = Math.cbrt(m / (nb_new_objs * base_density * density));
-                                var R = 1.5 * nb_new_objs * new_r / Math.PI;
+                                const nb_new_objs = randInt(4, 10);
+                                const new_r = Math.cbrt(m / (nb_new_objs * base_density * density));
+                                const R = 1.5 * nb_new_objs * new_r / Math.PI;
 
-                                var E = deltaKinetic + binding_E(m, r) - nb_new_objs * binding_E(m / nb_new_objs, new_r);
-                                var v = 500 * Math.sqrt(2 * E / m);
+                                const E = deltaKinetic + binding_E(m, r) - nb_new_objs * binding_E(m / nb_new_objs, new_r);
+                                const v = 500 * Math.sqrt(2 * E / m);
                                 for (let i = 0; i < nb_new_objs; ++i) {
                                     let theta = i * 2 * Math.PI / nb_new_objs + Math.random() * 2 - 1;
                                     new_objs.push({
@@ -273,30 +271,30 @@
 
 
     function update_velocity(node) {
-        for (var obj1 of node.childNodes) {
-            for (var obj2 of node.childNodes) {
+        for (const obj1 of node.childNodes) {
+            for (const obj2 of node.childNodes) {
                 if (obj1 !== obj2) {
-                    var x1 = parseFloat(obj1.getAttribute("cx"));
-                    var y1 = parseFloat(obj1.getAttribute("cy"));
+                    const x1 = parseFloat(obj1.getAttribute("cx"));
+                    const y1 = parseFloat(obj1.getAttribute("cy"));
 
-                    var x2 = parseFloat(obj2.getAttribute("cx"));
-                    var y2 = parseFloat(obj2.getAttribute("cy"));
+                    const x2 = parseFloat(obj2.getAttribute("cx"));
+                    const y2 = parseFloat(obj2.getAttribute("cy"));
 
-                    var r1 = parseFloat(obj1.getAttribute("r"));
-                    var r2 = parseFloat(obj2.getAttribute("r"));
+                    const r1 = parseFloat(obj1.getAttribute("r"));
+                    let r2 = parseFloat(obj2.getAttribute("r"));
 
-                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    const d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
                     if (d < r1 + r2) {
                         r2 *= d / (r2 + r1);
                     }
 
-                    var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
-                    var m2 = r2 * r2 * r2 * base_density * density2;
+                    const density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                    const m2 = r2 * r2 * r2 * base_density * density2;
 
-                    var F = G * m2 / (d * d * d);
+                    const F = G * m2 / (d * d * d);
 
-                    var v1_x = parseFloat(obj1.getAttribute("vx"));
-                    var v1_y = parseFloat(obj1.getAttribute("vy"));
+                    const v1_x = parseFloat(obj1.getAttribute("vx"));
+                    const v1_y = parseFloat(obj1.getAttribute("vy"));
 
                     obj1.setAttribute("vx", v1_x + (x2 - x1) * F * dt);
                     obj1.setAttribute("vy", v1_y + (y2 - y1) * F * dt);
@@ -306,37 +304,37 @@
     }
 
     function update_position(node) {
-        for (var obj of node.childNodes) {
-            var x = parseFloat(obj.getAttribute("cx"));
-            var y = parseFloat(obj.getAttribute("cy"));
-            var vx = parseFloat(obj.getAttribute("vx"));
-            var vy = parseFloat(obj.getAttribute("vy"));
+        for (const obj of node.childNodes) {
+            const x = parseFloat(obj.getAttribute("cx"));
+            const y = parseFloat(obj.getAttribute("cy"));
+            const vx = parseFloat(obj.getAttribute("vx"));
+            const vy = parseFloat(obj.getAttribute("vy"));
             obj.setAttribute("cx", x + vx * dt);
             obj.setAttribute("cy", y + vy * dt);
         }
     };
 
     function analyse_system(node) {
-        var kinetic = 0;
-        var potential = 0;
-        var binding = 0;
-        var lightest = Infinity;
-        var heaviest = 0;
-        var slowest = Infinity;
-        var fastest = 0;
-        var mass = 0;
+        let kinetic = 0;
+        let potential = 0;
+        let binding = 0;
+        let lightest = Infinity;
+        let heaviest = 0;
+        let slowest = Infinity;
+        let fastest = 0;
+        let mass = 0;
 
-        for (var obj1 of node.childNodes) {
+        for (const obj1 of node.childNodes) {
 
-            var v1_x = parseFloat(obj1.getAttribute("vx"));
-            var v1_y = parseFloat(obj1.getAttribute("vy"));
+            const v1_x = parseFloat(obj1.getAttribute("vx"));
+            const v1_y = parseFloat(obj1.getAttribute("vy"));
 
-            var r1 = parseFloat(obj1.getAttribute("r"));
+            const r1 = parseFloat(obj1.getAttribute("r"));
 
-            var density1 = parseFloat(obj1.getAttribute("fill-opacity"));
-            var m1 = r1 * r1 * r1 * base_density * density1;
+            const density1 = parseFloat(obj1.getAttribute("fill-opacity"));
+            const m1 = r1 * r1 * r1 * base_density * density1;
 
-            var v1 = Math.sqrt(v1_x * v1_x + v1_y * v1_y);
+            const v1 = Math.sqrt(v1_x * v1_x + v1_y * v1_y);
 
             kinetic += kinetic_E(m1, v1);
             binding += binding_E(m1, r1);
@@ -349,20 +347,20 @@
 
             mass += m1;
 
-            for (var obj2 of node.childNodes) {
+            for (const obj2 of node.childNodes) {
                 if (obj1 != obj2) {
-                    var x1 = parseFloat(obj1.getAttribute("cx"));
-                    var y1 = parseFloat(obj1.getAttribute("cy"));
+                    const x1 = parseFloat(obj1.getAttribute("cx"));
+                    const y1 = parseFloat(obj1.getAttribute("cy"));
 
-                    var x2 = parseFloat(obj2.getAttribute("cx"));
-                    var y2 = parseFloat(obj2.getAttribute("cy"));
+                    const x2 = parseFloat(obj2.getAttribute("cx"));
+                    const y2 = parseFloat(obj2.getAttribute("cy"));
 
-                    var d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    const d = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 
-                    var r2 = parseFloat(obj2.getAttribute("r"));
+                    const r2 = parseFloat(obj2.getAttribute("r"));
 
-                    var density2 = parseFloat(obj2.getAttribute("fill-opacity"));
-                    var m2 = r2 * r2 * r2 * base_density * density2;
+                    const density2 = parseFloat(obj2.getAttribute("fill-opacity"));
+                    const m2 = r2 * r2 * r2 * base_density * density2;
 
                     potential += potential_E(m1, m2, d);
                 }
@@ -383,7 +381,7 @@
         };
     }
 
-    var update = setInterval(function () {
+    let update = setInterval(function () {
         while (resolve_collisions(frame)) ;
         cleaning(frame, 0.5);
         update_velocity(frame);
@@ -391,7 +389,7 @@
         // center_on_max_r(frame);
     }, update_period)
 
-    var probe = setInterval(function () {
+    let probe = setInterval(function () {
         console.log(analyse_system(frame));
     }, probe_period);
     clearInterval(probe);
