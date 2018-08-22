@@ -86,9 +86,9 @@
         let max_r = 0;
         let max_obj;
 
-        for (let obj of node.childNodes){
+        for (let obj of node.childNodes) {
             let r = parseFloat(obj.getAttribute('r'));
-            if (r > max_r){
+            if (r > max_r) {
                 max_r = r;
                 max_obj = obj;
             }
@@ -202,6 +202,7 @@
 
                                 if (nb_new_objs % 2) {
                                     for (var i = Math.ceil(-nb_new_objs / 2); i < nb_new_objs / 2; ++i) {
+                                        let theta = Math.PI / (nb_new_objs + 1) * i + Math.random() * 2 - 1;
                                         new_objs.push({
                                             name: `${obj1.getAttribute("name")}_${i}`,
                                             cx: x0 - 2.5 * i * new_r * (y - other_y) / d,
@@ -209,13 +210,14 @@
                                             r: new_r,
                                             fill: fill,
                                             "fill-opacity": 1,
-                                            vx: v_x + Math.cos(Math.PI / (nb_new_objs + 1) * i) * new_v * (other_x - x) / d - Math.sin(Math.PI / (nb_new_objs + 1) * i) * new_v * (y - other_y) / d,
-                                            vy: v_y + Math.cos(Math.PI / (nb_new_objs + 1) * i) * new_v * (other_y - y) / d - Math.sin(Math.PI / (nb_new_objs + 1) * i) * new_v * (other_x - x) / d,
+                                            vx: v_x + Math.cos(theta) * new_v * (other_x - x) / d - Math.sin(theta) * new_v * (y - other_y) / d,
+                                            vy: v_y + Math.cos(theta) * new_v * (other_y - y) / d - Math.sin(theta) * new_v * (other_x - x) / d,
                                         });
                                     }
                                 } else {
                                     for (var i = -nb_new_objs / 2; i < 1 + nb_new_objs / 2; ++i) {
                                         if (i) {
+                                            let theta = Math.PI / (nb_new_objs + 1) * (i - .5) + Math.random() * 2 - 1;
                                             new_objs.push({
                                                 name: `${obj1.getAttribute("name")}_${i}`,
                                                 cx: x0 - 2.5 * (i + 0.5) * new_r * (y - other_y) / d,
@@ -223,8 +225,8 @@
                                                 r: new_r,
                                                 fill: fill,
                                                 "fill-opacity": 1,
-                                                vx: v_x + Math.cos(Math.PI / (nb_new_objs + 1) * (i - .5)) * new_v * (other_x - x) / d - Math.sin(Math.PI / (nb_new_objs + 1) * (i - .5)) * new_v * (y - other_y) / d,
-                                                vy: v_y + Math.cos(Math.PI / (nb_new_objs + 1) * (i - .5)) * new_v * (other_y - y) / d - Math.sin(Math.PI / (nb_new_objs + 1) * (i - .5)) * new_v * (other_x - x) / d,
+                                                vx: v_x + Math.cos(theta) * new_v * (other_x - x) / d - Math.sin(theta) * new_v * (y - other_y) / d,
+                                                vy: v_y + Math.cos(theta) * new_v * (other_y - y) / d - Math.sin(theta) * new_v * (other_x - x) / d,
                                             });
                                         }
                                     }
@@ -237,7 +239,7 @@
                                 var E = deltaKinetic + binding_E(m, r) - nb_new_objs * binding_E(m / nb_new_objs, new_r);
                                 var v = 500 * Math.sqrt(2 * E / m);
                                 for (let i = 0; i < nb_new_objs; ++i) {
-                                    let theta = i * 2 * Math.PI / nb_new_objs;
+                                    let theta = i * 2 * Math.PI / nb_new_objs + Math.random() * 2 - 1;
                                     new_objs.push({
                                         name: `${obj1.getAttribute("name")}_${i}`,
                                         cx: x + R * Math.cos(theta) * (x - other_x) / d + R * Math.sin(theta) * (y - other_y) / d,
@@ -386,7 +388,7 @@
         cleaning(frame, 0.5);
         update_velocity(frame);
         update_position(frame);
-        center_on_max_r(frame);
+        // center_on_max_r(frame);
     }, update_period)
 
     var probe = setInterval(function () {
