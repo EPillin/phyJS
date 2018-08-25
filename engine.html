@@ -194,20 +194,19 @@
                         const Eu = deltaKinetic * collision_unbind_E_ratio;
                         const Ek = deltaKinetic * collision_kinetic_E_ratio;
 
-                        const unbinded_mass = Math.min(Eu / binding_E(m, r), 1) * m;
-                        const new_m = m - unbinded_mass;
-                        r = Math.cbrt(new_m / (base_density * density));
+                        const unbound_mass = Math.min(Eu / binding_E(m, r), 1) * m;
 
                         const new_objs = [];
-                        if (unbinded_mass * 2 < m) {
+                        if (unbound_mass * 2 < m) {
+                            const new_m = m - unbound_mass;
+                            r = Math.cbrt(new_m / (base_density * density));
                             // const nb_new_objs = Math.round(1 / (.1 + Math.random() * .9));
                             const nb_new_objs = randInt(1, 10);
-                            const new_r = Math.cbrt(unbinded_mass / (nb_new_objs * base_density * density));
-                            const new_v = 100 * Math.sqrt(2 * Ek / unbinded_mass);
+                            const new_r = Math.cbrt(unbound_mass / (nb_new_objs * base_density * density));
+                            const new_v = 100 * Math.sqrt(2 * Ek / unbound_mass);
 
                             const x0 = x - (r + new_r + 1) * (x - other_x) / d;
                             const y0 = y - (r + new_r + 1) * (y - other_y) / d;
-
                             if (nb_new_objs % 2) {
                                 for (let i = Math.ceil(-nb_new_objs / 2); i < nb_new_objs / 2; ++i) {
                                     let theta = Math.PI / (nb_new_objs + 1) * i + Math.random() * 2 - 1;
@@ -246,6 +245,7 @@
 
                             const E = deltaKinetic + binding_E(m, r) - nb_new_objs * binding_E(m / nb_new_objs, new_r);
                             const v = 500 * Math.sqrt(2 * E / m);
+
                             for (let i = 0; i < nb_new_objs; ++i) {
                                 let theta = i * 2 * Math.PI / nb_new_objs + Math.random() * 2 - 1;
                                 new_objs.push({
