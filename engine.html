@@ -16,16 +16,16 @@
 <body style="height: 100%; margin: 0">
 <svg id="frame" height="100%" width="100%"></svg>
 <script>
-    const n_objs = 100;
+    const n_objs = 400;
 
     const dt = .03;
     const base_density = 10;
 
-    const update_period = 10;
+    const update_period = 50;
     const probe_period = 5000;
 
     const max_velocity = 80;
-    const max_r = 25;
+    const max_r = 10;
 
     const G = .5;
     const E_scale = .000001;
@@ -34,6 +34,14 @@
     const collision_kinetic_E_ratio = .99;
 
     const objects = [];
+    const frame = document.getElementById("frame");
+
+    const x0 = frame.getBoundingClientRect().width / 2;
+    const y0 = frame.getBoundingClientRect().height / 2;
+    const w = frame.getBoundingClientRect().width / 2;
+    const h = frame.getBoundingClientRect().height / 2;
+
+    const theta_velocity = .2;
 
     function randInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1) + min);
@@ -126,30 +134,63 @@
         center_on(node, max_obj);
     }
 
-    const frame = document.getElementById("frame");
 
     const starting_objects = [
-        // {name: "obj0", cx: 500, cy: 300, r: 80, fill: "rgb(255,255,0)", "fill-opacity": "0.8", vx: 0, vy: 0},
+        // {name: "obj0", cx: x0, cy: y0, r: 60, rgb: [255,255,0], "fill-opacity": "0.8", vx: 0, vy: 0},
         // {name: "obj1", cx: 200, cy: 100, r: 22, fill: "rgb(247,8,76)", "fill-opacity": "0.8", vx: 0, vy: 50},
         // {name: "obj2", cx: 200, cy: 500, r: 22, fill: "rgb(5,130,202)", "fill-opacity": "0.8", vx: 0, vy: -70},
         // {name: "obj3", cx: 150, cy: 250, r: 20, fill: "#0582ca", "fill-opacity": "0.8", vx: -5, vy: 5},
     ];
-    for (let i = 0; i < n_objs; ++i) {
-        starting_objects.push({
-                name: i,
-                cx: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().width / 2 + frame.getBoundingClientRect().width / 4),
-                cy: randInt(frame.getBoundingClientRect().width / 4, frame.getBoundingClientRect().height / 2 + frame.getBoundingClientRect().height / 4),
-                r: randInt(1, max_r),
-                rgb: [randInt(0, 255), randInt(0, 255), randInt(0, 255)],
-                // "fill-opacity": Math.random(),
-                "fill-opacity": 1,
-                vx: randInt(-max_velocity, max_velocity),
-                vy: randInt(-max_velocity, max_velocity),
-            }
-        );
+
+    function create_random_objects(n, objects, x, y, w, h) {
+        for (let i = 0; i < n; ++i) {
+            objects.push({
+                    name: i,
+                    cx: x + randInt(-w / 2, w / 2),
+                    cy: y + randInt(-h / 2, h / 2),
+                    r: randInt(1, max_r),
+                    rgb: [randInt(0, 255), randInt(0, 255), randInt(0, 255)],
+                    // "fill-opacity": Math.random(),
+                    "fill-opacity": 1,
+                    vx: randInt(-max_velocity, max_velocity),
+                    vy: randInt(-max_velocity, max_velocity),
+                }
+            );
+        }
+    }
+
+    function create_rotating_objects(n, objects, x0, y0, w, h, theta_velocity) {
+        for (let i = 0; i < n; ++i) {
+            let x = randInt(-w / 2, w / 2);
+            let y = randInt(-h / 2, h / 2);
+            let d = Math.sqrt(x * x + y * y);
+
+            let theta = Math.sign(y) * Math.acos(x / d);
+            console.log(theta);
+            let v = d * theta_velocity;
+
+            let vx = Math.cos(theta - Math.PI/2) * v;
+            let vy = Math.sin(theta - Math.PI/2) * v;
+            objects.push({
+                    name: i,
+                    cx: x0 + x,
+                    cy: y0 + y,
+                    r: randInt(1, max_r),
+                    rgb: [randInt(0, 255), randInt(0, 255), randInt(0, 255)],
+                    // "fill-opacity": Math.random(),
+                    "fill-opacity": 1,
+                    vx: vx,
+                    vy: vy,
+                }
+            );
+        }
     }
 
     // Init
+    // create_random_objects(n_objs, starting_objects, x0, y0, w, h);
+    create_rotating_objects(n_objs, starting_objects, x0, y0, w, h, theta_velocity);
+
+
     add_objects(frame, starting_objects, objects);
 
 
@@ -381,7 +422,7 @@
 
     let update = setInterval(function () {
         while (resolve_collisions_3(frame, objects)) ;
-        cleaning_2(frame, objects, 0.5);
+        cleaning_2(frame, objects, 1);
         update_velocity_3(objects);
         update_position_3(objects);
     }, update_period)
