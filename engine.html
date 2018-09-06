@@ -16,7 +16,7 @@
 <body style="height: 100%; margin: 0">
 <svg id="frame" height="100%" width="100%"></svg>
 <script>
-    const n_objs = 400;
+    const n_objs = 200;
 
     const dt = .03;
     const base_density = 10;
@@ -160,29 +160,36 @@
     }
 
     function create_rotating_objects(n, objects, x0, y0, w, h, theta_velocity) {
-        for (let i = 0; i < n; ++i) {
+        let cpt = 0;
+        const r = Math.min(w, h);
+        while (cpt < n) {
             let x = randInt(-w / 2, w / 2);
             let y = randInt(-h / 2, h / 2);
-            let d = Math.sqrt(x * x + y * y);
 
-            let theta = Math.sign(y) * Math.acos(x / d);
-            console.log(theta);
-            let v = d * theta_velocity;
+            if (x * x + y * y < (r * r)/4) {
+                let d = Math.sqrt(x * x + y * y);
 
-            let vx = Math.cos(theta - Math.PI/2) * v;
-            let vy = Math.sin(theta - Math.PI/2) * v;
-            objects.push({
-                    name: i,
-                    cx: x0 + x,
-                    cy: y0 + y,
-                    r: randInt(1, max_r),
-                    rgb: [randInt(0, 255), randInt(0, 255), randInt(0, 255)],
-                    // "fill-opacity": Math.random(),
-                    "fill-opacity": 1,
-                    vx: vx,
-                    vy: vy,
-                }
-            );
+                let theta = Math.sign(y) * Math.acos(x / d);
+                console.log(theta);
+                let v = d * theta_velocity;
+
+                let vx = Math.cos(theta - Math.PI / 2) * v;
+                let vy = Math.sin(theta - Math.PI / 2) * v;
+
+                objects.push({
+                        name: cpt,
+                        cx: x0 + x,
+                        cy: y0 + y,
+                        r: randInt(1, max_r),
+                        rgb: [randInt(0, 255), randInt(0, 255), randInt(0, 255)],
+                        // "fill-opacity": Math.random(),
+                        "fill-opacity": 1,
+                        vx: vx,
+                        vy: vy,
+                    }
+                );
+                ++cpt;
+            }
         }
     }
 
